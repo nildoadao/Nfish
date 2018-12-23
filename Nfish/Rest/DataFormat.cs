@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nfish
+namespace Nfish.Rest
 {
-    public class Class1
+    public enum DataFormat
     {
+        Json,
+        Xml
     }
 }
