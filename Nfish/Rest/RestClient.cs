@@ -35,16 +35,25 @@ namespace Nfish.Rest
         /// <summary>
         /// Base Url to perform requests
         /// </summary>
-        public Uri BaseUrl { get; set; }
+        public Uri BaseUrl
+        {
+            get
+            {
+                return BaseUrl;
+            }
+            set
+            {
+                BaseUrl = value;
+                Client.BaseAddress = value;
+            }
+        }
 
         private HttpClient Client { get; set; }
 
-        public RestClient(string baseUrl)
+        public RestClient()
         {
-            BaseUrl = new Uri(baseUrl);
             Encoding = Encoding.GetEncoding("ISO-8859-1");
             Client = HttpHelper.Create();
-            Client.BaseAddress = BaseUrl;
         }
 
         /// <summary>
@@ -113,13 +122,11 @@ namespace Nfish.Rest
                 }
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }
@@ -140,13 +147,11 @@ namespace Nfish.Rest
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }
@@ -159,13 +164,11 @@ namespace Nfish.Rest
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = responseMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }
@@ -178,13 +181,11 @@ namespace Nfish.Rest
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }
@@ -217,13 +218,11 @@ namespace Nfish.Rest
                 }
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }
@@ -244,13 +243,11 @@ namespace Nfish.Rest
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
                 {
-                    IResponse response = new RestResponse()
-                    {
-                        StatusCode = (int)responseMessage.StatusCode,
-                        RequestMessage = request,
-                        Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value),
-                        JsonContent = await responseMessage.Content.ReadAsStringAsync()
-                    };
+                    IResponse response = RestFactory.CreateResponse();
+                    response.StatusCode = (int)responseMessage.StatusCode;
+                    response.RequestMessage = request;
+                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
+                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
                     return response;
                 }
             }

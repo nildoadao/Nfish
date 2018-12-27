@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\Common\Enums.cs" />
+    <Compile Include="Application\Storage.cs" />
     <Compile Include="Application\UpdateService.cs" />
     <Compile Include="Rest\BasicAuthenticator.cs" />
     <Compile Include="Rest\FileParameter.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="Rest\IResponse.cs" />
     <Compile Include="Rest\Method.cs" />
     <Compile Include="Rest\RestClient.cs" />
+    <Compile Include="Rest\RestFactory.cs" />
     <Compile Include="Rest\RestRequest.cs" />
     <Compile Include="Rest\DataFormat.cs" />
     <Compile Include="Rest\RestResponse.cs" />

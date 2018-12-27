@@ -375,5 +375,15 @@ namespace Nfish.Application.Common
             SFTP,
             TFTP
         }
+
+        public enum VolumeType
+        {
+            Mirrored = 1,
+            NonRedundant = 0,
+            RawDevice = -1,
+            SpannedMirrors = 10,
+            SpannedStripesWithParity = 50,
+            StripedWithParity = 5
+        }
     }
 }

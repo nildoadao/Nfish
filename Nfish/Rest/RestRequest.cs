@@ -38,9 +38,8 @@ namespace Nfish.Rest
             Resource = resource;            
         }
 
-        public RestRequest(string resource, Method method) : this()
+        public RestRequest(string resource, Method method) : this(resource)
         {
-            Resource = resource;
             Method = method;
         }
 
