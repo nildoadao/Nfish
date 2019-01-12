@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Nfish.Application.Common.Enums;
+using Nfish.Application.Common;
 
 namespace Nfish.Application
 {
@@ -20,7 +20,7 @@ namespace Nfish.Application
             this.authenticator = authenticator;
         }
 
-        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, VolumeType type)
+        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type)
         {
             IRequest request = new RestRequest(pushUri, Method.POST);
             List<IDictionary<string, string>> volumeDrives = new List<IDictionary<string, string>>();
@@ -38,7 +38,7 @@ namespace Nfish.Application
             return await client.ExecuteAsync(request);
         }
 
-        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, VolumeType type, long capacity, long ioSize, string name)
+        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type, long capacity, long ioSize, string name)
         {
             IRequest request = new RestRequest(pushUri, Method.POST);
             List<IDictionary<string, string>> volumeDrives = new List<IDictionary<string, string>>();

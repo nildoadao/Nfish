@@ -74,10 +74,10 @@ namespace Nfish.Rest
                     return await ExecuteGetAsync(request);
 
                 case Method.POST:
-                    return await ExecutePostAsync(request);
+                    return await ExecutePostOrPutAsync(request);
 
                 case Method.PUT:
-                    return await ExecutePutAsync(request);
+                    return await ExecutePostOrPutAsync(request);
 
                 case Method.DELETE:
                     return await ExecuteDeleteAsync(request);
@@ -95,66 +95,12 @@ namespace Nfish.Rest
             }
         }
 
-        private async Task<IResponse> ExecutePostAsync(IRequest request)
+        private async Task<IResponse> ExecutePostOrPutAsync(IRequest request)
         {
             if (request.Files.Count > 0)
-                return await PostMultipartContent(request);
+                return await MultipartRequestAsync(request, request.Method);
             else
-                return await PostStringContent(request);
-        }
-
-        private async Task<IResponse> PostMultipartContent(IRequest request)
-        {
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, request.Resource))
-            using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
-            {
-                AddRequestHeaders(request, requestMessage);
-                foreach (FileParameter file in request.Files)
-                {
-                    StreamContent fileContent = new StreamContent(File.Open(file.Path, FileMode.Open));
-                    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
-                    fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
-                    {
-                        Name = "\"file\"",
-                        FileName = string.Format("\"{0}\"", Path.GetFileName(file.Path))
-                    };
-                    multipartContent.Add(fileContent);
-                }
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
-            }
-        }
-
-        private async Task<IResponse> PostStringContent(IRequest request)
-        {
-            string json = "";
-
-            if (request.Parameters.Count > 0)
-                json = JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
-            else
-                json = request.JsonBody;
-
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, request.Resource))
-            using (StringContent stringContent = new StringContent(json, Encoding, "application/json"))
-            {
-                AddRequestHeaders(request, requestMessage);
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
-            }
+                return await StringRequestAsync(request, request.Method);
         }
 
         private async Task<IResponse> ExecuteGetAsync(IRequest request)
@@ -191,17 +137,11 @@ namespace Nfish.Rest
             }
         }
 
-        private async Task<IResponse> ExecutePutAsync(IRequest request)
+        private async Task<IResponse> MultipartRequestAsync(IRequest request, Method method)
         {
-            if (request.Files.Count > 0)
-                return await PutMultipartContent(request);
-            else
-                return await PutStringContent(request);
-        }
+            HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
 
-        private async Task<IResponse> PutMultipartContent(IRequest request)
-        {
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Put, request.Resource))
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, request.Resource))
             using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
             {
                 AddRequestHeaders(request, requestMessage);
@@ -228,16 +168,19 @@ namespace Nfish.Rest
             }
         }
 
-        private async Task<IResponse> PutStringContent(IRequest request)
+        private async Task<IResponse> StringRequestAsync(IRequest request, Method method)
         {
+            HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
+
             string json = "";
 
             if (request.Parameters.Count > 0)
                 json = JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
-            else
-                json = request.JsonBody;
 
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Put, request.Resource))
+            if (!String.IsNullOrEmpty(request.JsonBody))
+                json += request.JsonBody;
+
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, request.Resource))
             using (StringContent stringContent = new StringContent(json, Encoding, "application/json"))
             {
                 AddRequestHeaders(request, requestMessage);

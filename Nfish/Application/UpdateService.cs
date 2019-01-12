@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Nfish.Rest;
 using Nfish.Application.Common;
 using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace Nfish.Application
 {
@@ -26,6 +27,17 @@ namespace Nfish.Application
             this.authenticator = authenticator;
         }
 
+        public async Task<string> GetUpdateServiceUriAsync()
+        {
+            IRequest request = RestFactory.CreateRequest();
+            request.Resource = @"/redfish/v1";
+            request.Method = Method.GET;
+            client.Authenticate(authenticator, request);
+            IResponse response = await client.ExecuteAsync(request);
+            JObject json = JObject.Parse(response.JsonContent);
+            return json["UpdateService"]["@odata.id"].ToString();
+        }
+
         /// <summary>
         /// Performs a DTMF software update
         /// </summary>
@@ -33,16 +45,16 @@ namespace Nfish.Application
         /// <param name="targets">The array of URIs indicating where the update image is to be applied</param>
         /// <param name="protocol">The network protocol used by the Update Service</param>
         /// <returns>Rest response of the update request</returns>
-        public Task<IResponse> SimpleUpdateAsync(string image, string[] targets, Enums.TransferProtocol protocol)
+        public async Task<IResponse> SimpleUpdateAsync(string image, string[] targets, Enums.TransferProtocol protocol)
         {
             IRequest request = RestFactory.CreateRequest();
-            request.Resource = @"/redfish/v1/UpdateService/Actions/SimpleUpdate";
+            request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
             request.Parameters.Add("ImageURI", image);
             request.Parameters.Add("Targets", targets);
             request.Parameters.Add("TransferProtocol", protocol);
             client.Authenticate(authenticator, request);
-            return client.ExecuteAsync(request);
+            return await client.ExecuteAsync(request);
         }
 
         /// <summary>
@@ -50,26 +62,25 @@ namespace Nfish.Application
         /// </summary>
         /// <param name="image">The URI of the software image to be installed</param>
         /// <returns>Rest response of the update request</returns>
-        public Task<IResponse> SimpleUpdateAsync(string image)
+        public async Task<IResponse> SimpleUpdateAsync(string image)
         {
             IRequest request = RestFactory.CreateRequest();
-            request.Resource = @"/redfish/v1/UpdateService/Actions/SimpleUpdate";
+            request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
             request.Parameters.Add("ImageURI", image);
             client.Authenticate(authenticator, request);
-            return client.ExecuteAsync(request);
+            return await client.ExecuteAsync(request);
         }
 
         /// <summary>
         /// Upload an file to an given uri
         /// </summary>
-        /// <param name="pushUri">Uri to upload the file</param>
         /// <param name="path">Local path of the file</param>
         /// <returns>Uri of the resource created</returns>
-        public async Task<Uri> UploadFileAsync(string pushUri, string path)
+        public async Task<Uri> UploadFileAsync(string path)
         {
             IRequest request = RestFactory.CreateRequest();
-            request.Resource = pushUri;
+            request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
             FileParameter file = new FileParameter(path, Path.GetFileName(path), "multipart/form-data");
             request.AddFile(file);
@@ -82,14 +93,13 @@ namespace Nfish.Application
         /// <summary>
         /// Upload an file to an given uri
         /// </summary>
-        /// <param name="pushUri">Uri to upload the file</param>
         /// <param name="path">Local path of the file</param>
         /// <param name="headers">Custom headers for the upload request</param>
         /// <returns>Uri of the resource created</returns>
-        public async Task<Uri> UploadFileAsync(string pushUri, string path, IDictionary<string, IList<string>> headers)
+        public async Task<Uri> UploadFileAsync(string path, IDictionary<string, IList<string>> headers)
         {
             IRequest request = RestFactory.CreateRequest();
-            request.Resource = pushUri;
+            request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
             FileParameter file = new FileParameter(path, Path.GetFileName(path), "multipart/form-data");
             request.AddFile(file);

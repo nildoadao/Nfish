@@ -275,7 +275,7 @@ namespace Nfish.Application.Common
 
         public enum BootSourceOverrideEnabled
         {
-            Continuis,
+            Continuous,
             Disabled,
             Once
         }
