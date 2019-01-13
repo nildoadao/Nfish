@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\Common\Enums.cs" />
+    <Compile Include="Application\Oem\Dell\ScpFile.cs" />
     <Compile Include="Application\Storage.cs" />
     <Compile Include="Application\UpdateService.cs" />
     <Compile Include="Rest\BasicAuthenticator.cs" />
@@ -62,8 +63,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\HttpHelper.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Application\Oem\Dell\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

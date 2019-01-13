@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using System.Xml.Serialization;
 
 namespace Nfish.Rest
 {
@@ -171,17 +172,34 @@ namespace Nfish.Rest
         private async Task<IResponse> StringRequestAsync(IRequest request, Method method)
         {
             HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
+            string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
 
-            string json = "";
+            string body = "";
 
-            if (request.Parameters.Count > 0)
-                json = JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
-
-            if (!String.IsNullOrEmpty(request.JsonBody))
-                json += request.JsonBody;
+            if(request.Format == DataFormat.Json)
+            {
+                if (request.Parameters.Count > 0)
+                {
+                    body += JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
+                }
+                if (!String.IsNullOrEmpty(request.JsonBody))
+                    body += request.JsonBody;
+            }
+            else
+            {
+                if (request.Parameters.Count > 0)
+                {
+                    using (StringWriter xml = new StringWriter())
+                    {
+                        XmlSerializer parser = new XmlSerializer(request.Parameters.GetType());
+                        parser.Serialize(xml, request.Parameters);
+                        body += xml.ToString();
+                    }
+                }
+            }
 
             using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, request.Resource))
-            using (StringContent stringContent = new StringContent(json, Encoding, "application/json"))
+            using (StringContent stringContent = new StringContent(body, Encoding, format))
             {
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))

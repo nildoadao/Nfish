@@ -77,7 +77,7 @@ namespace Nfish.Application
         /// </summary>
         /// <param name="path">Local path of the file</param>
         /// <returns>Uri of the resource created</returns>
-        public async Task<Uri> UploadFileAsync(string path)
+        public async Task<string> UploadFileAsync(string path)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
@@ -87,7 +87,7 @@ namespace Nfish.Application
             client.Authenticate(authenticator, request);
             IResponse response = await client.ExecuteAsync(request);
             response.Headers.TryGetValue("Location", out IEnumerable<string> values);
-            return new Uri(values.FirstOrDefault());
+            return values.FirstOrDefault();
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Nfish.Application
         /// <param name="path">Local path of the file</param>
         /// <param name="headers">Custom headers for the upload request</param>
         /// <returns>Uri of the resource created</returns>
-        public async Task<Uri> UploadFileAsync(string path, IDictionary<string, IList<string>> headers)
+        public async Task<string> UploadFileAsync(string path, IDictionary<string, IList<string>> headers)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
@@ -110,7 +110,7 @@ namespace Nfish.Application
             client.Authenticate(authenticator, request);
             IResponse response = await client.ExecuteAsync(request);
             response.Headers.TryGetValue("Location", out IEnumerable<string> values);
-            return new Uri(values.FirstOrDefault());
+            return values.FirstOrDefault();
         }
     }
 }
