@@ -18,10 +18,24 @@ namespace Nfish.Rest
     /// </summary>
     public class RestClient : IClient
     {
+        private string host;
+        private Uri baseUrl;
+
         /// <summary>
         /// Device's hostname or Ip address.
         /// </summary>
-        public string Host { get; set; }
+        public string Host
+        {
+            get
+            {
+                return host;
+            }
+            set
+            {
+                host = value;
+                baseUrl = new Uri(host);
+            }
+        }
 
         /// <summary>
         /// Proxy to handle requests.
@@ -40,12 +54,12 @@ namespace Nfish.Rest
         {
             get
             {
-                return BaseUrl;
+                return baseUrl;
             }
             set
             {
-                BaseUrl = value;
-                Client.BaseAddress = value;
+                baseUrl = value;
+                Client.BaseAddress = baseUrl;
             }
         }
 

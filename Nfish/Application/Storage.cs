@@ -22,7 +22,11 @@ namespace Nfish.Application
 
         public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type)
         {
-            IRequest request = new RestRequest(pushUri, Method.POST);
+            IRequest request = RestFactory.CreateRequest();
+            request.Resource = pushUri;
+            request.Method = Method.POST;
+            request.Format = DataFormat.Json;
+
             List<IDictionary<string, string>> volumeDrives = new List<IDictionary<string, string>>();
             
             foreach(string drive in drives)
@@ -40,7 +44,11 @@ namespace Nfish.Application
 
         public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type, long capacity, long ioSize, string name)
         {
-            IRequest request = new RestRequest(pushUri, Method.POST);
+            IRequest request = RestFactory.CreateRequest();
+            request.Resource = pushUri;
+            request.Method = Method.POST;
+            request.Format = DataFormat.Json;
+
             List<IDictionary<string, string>> volumeDrives = new List<IDictionary<string, string>>();
 
             foreach (string drive in drives)
@@ -55,7 +63,20 @@ namespace Nfish.Application
             request.Parameters.Add("CapacityBytes", capacity);
             request.Parameters.Add("OptimumIOSizeBytes", ioSize);
             request.Parameters.Add("Name", name);
+
             client.Authenticate(authenticator, request);
+            return await client.ExecuteAsync(request);
+        }
+
+        public async Task<IResponse> VolumeInitializeAsync(string target)
+        {
+            IRequest request = RestFactory.CreateRequest();
+            request.Resource = target;
+            request.Method = Method.POST;
+            request.Format = DataFormat.Json;
+
+            client.Authenticate(authenticator, request);
+
             return await client.ExecuteAsync(request);
         }
     }

@@ -76,8 +76,8 @@ namespace Nfish.Application
         /// Upload an file to an given uri
         /// </summary>
         /// <param name="path">Local path of the file</param>
-        /// <returns>Uri of the resource created</returns>
-        public async Task<string> UploadFileAsync(string path)
+        /// <returns>Rest response of the upload</returns>
+        public async Task<IResponse> UploadFileAsync(string path)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
@@ -85,9 +85,7 @@ namespace Nfish.Application
             FileParameter file = new FileParameter(path, Path.GetFileName(path), "multipart/form-data");
             request.AddFile(file);
             client.Authenticate(authenticator, request);
-            IResponse response = await client.ExecuteAsync(request);
-            response.Headers.TryGetValue("Location", out IEnumerable<string> values);
-            return values.FirstOrDefault();
+            return await client.ExecuteAsync(request);
         }
 
         /// <summary>
@@ -95,8 +93,8 @@ namespace Nfish.Application
         /// </summary>
         /// <param name="path">Local path of the file</param>
         /// <param name="headers">Custom headers for the upload request</param>
-        /// <returns>Uri of the resource created</returns>
-        public async Task<string> UploadFileAsync(string path, IDictionary<string, IList<string>> headers)
+        /// <returns>Rest response of the update</returns>
+        public async Task<IResponse> UploadFileAsync(string path, IDictionary<string, IList<string>> headers)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
@@ -108,9 +106,7 @@ namespace Nfish.Application
                 request.Headers.Add(header);
 
             client.Authenticate(authenticator, request);
-            IResponse response = await client.ExecuteAsync(request);
-            response.Headers.TryGetValue("Location", out IEnumerable<string> values);
-            return values.FirstOrDefault();
+            return await client.ExecuteAsync(request);
         }
     }
 }
