@@ -45,9 +45,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\Common\Enums.cs" />
+    <Compile Include="Application\Common\Status.cs" />
+    <Compile Include="Application\Drive.cs" />
     <Compile Include="Application\Oem\Dell\ScpFile.cs" />
     <Compile Include="Application\Storage.cs" />
     <Compile Include="Application\UpdateService.cs" />
+    <Compile Include="Application\Volume.cs" />
     <Compile Include="Rest\BasicAuthenticator.cs" />
     <Compile Include="Rest\FileParameter.cs" />
     <Compile Include="Rest\IAuthenticator.cs" />

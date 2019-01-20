@@ -16,15 +16,16 @@ namespace Nfish.Application
         private IAuthenticator authenticator;
 
         /// <summary>
-        /// Creates a new instance of UpdateService
+        /// Class to manage UpdateServices taks.
         /// </summary>
-        /// <param name="host">Device hostname or ip address</param>
-        /// <param name="authenticator">Authentication method</param>
-        public UpdateService(string host, IAuthenticator authenticator)
+        /// <param name="host">Hostname or Ip Address of the server</param>
+        /// <param name="user">User for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        public UpdateService(string host, string user, string password)
         {
             client = RestFactory.CreateClient();
-            client.BaseUrl = new Uri(string.Format(@"https://{0}", host));
-            this.authenticator = authenticator;
+            client.Host = host;
+            authenticator = new BasicAuthenticator(user, password);
         }
 
         public async Task<string> GetUpdateServiceUriAsync()

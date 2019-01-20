@@ -11,7 +11,6 @@ namespace Nfish.Rest
     public interface IClient
     {
         string Host { get; set; }
-        Uri BaseUrl { get; set; }
         IWebProxy Proxy { get; set; }
         Encoding Encoding { get; set; }
         void Authenticate(IAuthenticator authenticator, IRequest request);

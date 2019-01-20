@@ -19,21 +19,19 @@ namespace Nfish.Rest
     public class RestClient : IClient
     {
         private string host;
-        private Uri baseUrl;
+        private string baseUrl;
 
         /// <summary>
         /// Device's hostname or Ip address.
         /// </summary>
         public string Host
         {
-            get
-            {
-                return host;
-            }
+            get { return host; }
+
             set
             {
                 host = value;
-                baseUrl = new Uri(host);
+                baseUrl = string.Format(@"https://{0}", host);
             }
         }
 
@@ -46,22 +44,6 @@ namespace Nfish.Rest
         /// Enconding to perform requests, Default Encoding is ISO-8859-1
         /// </summary>
         public Encoding Encoding { get; set; }
-
-        /// <summary>
-        /// Base Url to perform requests
-        /// </summary>
-        public Uri BaseUrl
-        {
-            get
-            {
-                return baseUrl;
-            }
-            set
-            {
-                baseUrl = value;
-                Client.BaseAddress = baseUrl;
-            }
-        }
 
         private HttpClient Client { get; set; }
 
@@ -120,7 +102,7 @@ namespace Nfish.Rest
 
         private async Task<IResponse> ExecuteGetAsync(IRequest request)
         {
-            using(HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, request.Resource))
+            using(HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, baseUrl + request.Resource))
             {
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
@@ -137,7 +119,7 @@ namespace Nfish.Rest
 
         private async Task<IResponse> ExecuteDeleteAsync(IRequest request)
         {
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, request.Resource))
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, baseUrl + request.Resource))
             {
                 AddRequestHeaders(request, requestMessage);
                 using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
@@ -156,7 +138,7 @@ namespace Nfish.Rest
         {
             HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
 
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, request.Resource))
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, baseUrl + request.Resource))
             using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
             {
                 AddRequestHeaders(request, requestMessage);
@@ -212,7 +194,7 @@ namespace Nfish.Rest
                 }
             }
 
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, request.Resource))
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, baseUrl + request.Resource))
             using (StringContent stringContent = new StringContent(body, Encoding, format))
             {
                 AddRequestHeaders(request, requestMessage);

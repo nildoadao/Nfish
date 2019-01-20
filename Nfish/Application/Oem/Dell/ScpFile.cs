@@ -16,17 +16,18 @@ namespace Nfish.Application.Oem.Dell
 
         private IClient client;
         private IAuthenticator authenticator;
-        
+
         /// <summary>
         /// Class to manage Scp Files
         /// </summary>
         /// <param name="host">Hostname or Ip Address of the server</param>
-        /// <param name="authenticator">Authentication method</param>
-        public ScpFile(string host, IAuthenticator authenticator)
+        /// <param name="user">user for basic authentication</param>
+        /// <param name="password">password for basic authentication</param>
+        public ScpFile(string host, string user, string password)
         {
             client = RestFactory.CreateClient();
-            client.BaseUrl = new Uri(string.Format(@"https://{0}", host));
-            this.authenticator = authenticator;
+            client.Host = host;
+            authenticator = new BasicAuthenticator(user, password);
         }
 
         /// <summary>
