@@ -46,7 +46,7 @@ namespace Nfish.Application
         /// <param name="targets">The array of URIs indicating where the update image is to be applied</param>
         /// <param name="protocol">The network protocol used by the Update Service</param>
         /// <returns>Rest response of the update request</returns>
-        public async Task<IResponse> SimpleUpdateAsync(string image, string[] targets, Enums.TransferProtocol protocol)
+        public async Task<IResponse> SimpleUpdateAsync(string image, IEnumerable<string> targets, Enums.TransferProtocol protocol)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();

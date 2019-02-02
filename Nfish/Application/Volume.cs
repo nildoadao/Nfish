@@ -20,7 +20,7 @@ namespace Nfish.Application
             authenticator = new BasicAuthenticator(user, password);
         }
 
-        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type)
+        public async Task<IResponse> CreateVolumeAsync(string pushUri, IEnumerable<string> drives, Enums.VolumeType type)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = pushUri;
@@ -42,7 +42,7 @@ namespace Nfish.Application
             return await client.ExecuteAsync(request);
         }
 
-        public async Task<IResponse> CreateVolumeAsync(string pushUri, string[] drives, Enums.VolumeType type, long capacity, long ioSize, string name)
+        public async Task<IResponse> CreateVolumeAsync(string pushUri, IEnumerable<string> drives, Enums.VolumeType type, long capacity, long ioSize, string name)
         {
             IRequest request = RestFactory.CreateRequest();
             request.Resource = pushUri;

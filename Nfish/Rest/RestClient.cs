@@ -79,6 +79,9 @@ namespace Nfish.Rest
                 case Method.DELETE:
                     return await ExecuteDeleteAsync(request);
 
+                case Method.PATCH:
+                    return await ExecutePatchAsync(request);
+
                 default:
                     return await ExecuteGetAsync(request);
             }
@@ -105,15 +108,7 @@ namespace Nfish.Rest
             using(HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, baseUrl + request.Resource))
             {
                 AddRequestHeaders(request, requestMessage);
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
+                return await GetResponseAsync(requestMessage, request);
             }
         }
 
@@ -122,18 +117,15 @@ namespace Nfish.Rest
             using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, baseUrl + request.Resource))
             {
                 AddRequestHeaders(request, requestMessage);
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
+                return await GetResponseAsync(requestMessage, request);
             }
         }
 
+        private async Task<IResponse> ExecutePatchAsync(IRequest request)
+        {
+            return await StringRequestAsync(request, Method.PATCH);
+        }
+             
         private async Task<IResponse> MultipartRequestAsync(IRequest request, Method method)
         {
             HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
@@ -142,37 +134,39 @@ namespace Nfish.Rest
             using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
             {
                 AddRequestHeaders(request, requestMessage);
-                foreach (FileParameter file in request.Files)
+                AddMultiparBody(multipartContent, request, method);
+
+                if (request.Parameters.Count > 0)
                 {
-                    StreamContent fileContent = new StreamContent(File.Open(file.Path, FileMode.Open));
-                    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
-                    fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
-                    {
-                        Name = "\"file\"",
-                        FileName = string.Format("\"{0}\"", Path.GetFileName(file.Path))
-                    };
-                    multipartContent.Add(fileContent);
+                    string body = BuildStringBody(request, method);
+                    string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
+                    multipartContent.Add(new StringContent(body, Encoding, format));
                 }
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
+                return await GetResponseAsync(requestMessage, request);
             }
         }
 
-        private async Task<IResponse> StringRequestAsync(IRequest request, Method method)
+        private HttpContent AddMultiparBody(MultipartFormDataContent content, IRequest request, Method method)
         {
-            HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
-            string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
+            foreach (FileParameter file in request.Files)
+            {
+                StreamContent fileContent = new StreamContent(File.Open(file.Path, FileMode.Open));
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
+                fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "\"file\"",
+                    FileName = string.Format("\"{0}\"", Path.GetFileName(file.Path))
+                };
+                content.Add(fileContent);
+            }
+            return content;
+        }
 
+        private string BuildStringBody(IRequest request, Method method)
+        {            
             string body = "";
 
-            if(request.Format == DataFormat.Json)
+            if (request.Format == DataFormat.Json)
             {
                 if (request.Parameters.Count > 0)
                 {
@@ -193,20 +187,47 @@ namespace Nfish.Rest
                     }
                 }
             }
+            return body;
+        }
+
+        private async Task<IResponse> GetResponseAsync(HttpRequestMessage message, IRequest request)
+        {
+            using (HttpResponseMessage responseMessage = await Client.SendAsync(message))
+            {
+                IResponse response = RestFactory.CreateResponse();
+                response.StatusCode = (int)responseMessage.StatusCode;
+                response.RequestMessage = request;
+                response.Headers = message.Headers.ToDictionary(x => x.Key, x => x.Value);
+                response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
+                return response;
+            }
+        }
+
+        private async Task<IResponse> StringRequestAsync(IRequest request, Method method)
+        {            
+            string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
+            HttpMethod type = null;
+
+            switch (method)
+            {
+                case Method.POST:
+                    type = HttpMethod.Post;
+                    break;
+                case Method.PUT:
+                    type = HttpMethod.Put;
+                    break;
+                case Method.PATCH:
+                    type = new HttpMethod("PATCH");
+                    break;
+            }
+
+            string body = BuildStringBody(request, method);
 
             using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, baseUrl + request.Resource))
             using (StringContent stringContent = new StringContent(body, Encoding, format))
             {
                 AddRequestHeaders(request, requestMessage);
-                using (HttpResponseMessage responseMessage = await Client.SendAsync(requestMessage))
-                {
-                    IResponse response = RestFactory.CreateResponse();
-                    response.StatusCode = (int)responseMessage.StatusCode;
-                    response.RequestMessage = request;
-                    response.Headers = requestMessage.Headers.ToDictionary(x => x.Key, x => x.Value);
-                    response.JsonContent = await responseMessage.Content.ReadAsStringAsync();
-                    return response;
-                }
+                return await GetResponseAsync(requestMessage, request);
             }
         }
     }
