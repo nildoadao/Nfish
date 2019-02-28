@@ -18,6 +18,7 @@ namespace Nfish.Util
         public Dictionary<string, string> Resources { get; private set; }
         private List<string> urisFound;
         private List<string> urisFollowed;
+        private List<string> urisToAdd;
         private IClient client;
 
         /// <summary>
@@ -30,6 +31,23 @@ namespace Nfish.Util
         {
             this.host = host;
             authenticator = new BasicAuthenticator(user, password);
+            Resources = new Dictionary<string, string>();
+            urisFound = new List<string>();
+            urisFollowed = new List<string>();
+            urisToAdd = new List<string>();
+            client = RestFactory.CreateClient();
+            client.Host = host;
+        }
+
+        /// <summary>
+        /// Creates a new Crawler.
+        /// </summary>
+        /// <param name="host">Hostname or Ip address</param>
+        /// <param name="authenticator">Authentication object</param>
+        public RedfishCrawler(string host, IAuthenticator authenticator)
+        {
+            this.host = host;
+            this.authenticator = authenticator;
             Resources = new Dictionary<string, string>();
             urisFound = new List<string>();
             urisFollowed = new List<string>();
@@ -53,8 +71,12 @@ namespace Nfish.Util
 
             JObject json = JObject.Parse(response.JsonContent);
 
-            if(!Resources.Keys.Contains(json["Id"].ToString()))
-                Resources.Add(json["Id"].ToString(), json["@odata.id"].ToString());
+            string jsonId = json["Id"] == null ? string.Empty : json["Id"].ToString();
+            string odataId = json["@odata.id"] == null ? string.Empty : json["@odata.id"].ToString();
+
+            if(!Resources.Keys.Contains(jsonId) && !String.IsNullOrEmpty(jsonId)
+                && !String.IsNullOrEmpty(odataId))
+                Resources.Add(jsonId, odataId);
 
             foreach (JProperty item in json.Children())
                 GetLinks(item);
@@ -76,7 +98,7 @@ namespace Nfish.Util
                 JProperty property = (JProperty)item;
 
                 if (property.Name.Equals("@odata.id") && !urisFound.Contains(property.Value.ToString()))
-                    urisFound.Add(property.Value.ToString());
+                    urisToAdd.Add(property.Value.ToString());
             }
         }
 
@@ -87,15 +109,28 @@ namespace Nfish.Util
         public async Task Crawl()
         {
             // Begin the mapping from Redfish Root
-            await MapUri(@"/redfish/v1/"); 
+            await MapUri(@"/redfish/v1");
 
-            while(urisFound.Count > urisFollowed.Count)
+            foreach (string uri in urisToAdd)
+                if (!urisFound.Contains(uri))
+                    urisFound.Add(uri);
+
+            urisToAdd.Clear();
+
+            while (urisFound.Count > urisFollowed.Count)
             {
                 foreach(string uri in urisFound)
                 {
                     if (!urisFollowed.Contains(uri))
                         await MapUri(uri);
                 }
+
+                foreach (string uri in urisToAdd)
+                {
+                    if(!urisFound.Contains(uri))
+                        urisFound.Add(uri);
+                }
+                urisToAdd.Clear();
             }
         }
     }

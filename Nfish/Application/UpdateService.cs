@@ -7,6 +7,7 @@ using Nfish.Rest;
 using Nfish.Application.Common;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using Nfish.Util;
 
 namespace Nfish.Application
 {
@@ -30,13 +31,9 @@ namespace Nfish.Application
 
         public async Task<string> GetUpdateServiceUriAsync()
         {
-            IRequest request = RestFactory.CreateRequest();
-            request.Resource = @"/redfish/v1";
-            request.Method = Method.GET;
-            client.Authenticate(authenticator, request);
-            IResponse response = await client.ExecuteAsync(request);
-            JObject json = JObject.Parse(response.JsonContent);
-            return json["UpdateService"]["@odata.id"].ToString();
+            RedfishCrawler crawler = new RedfishCrawler(client.Host, authenticator);
+            await crawler.Crawl();
+            return crawler.Resources["UpdateService"];
         }
 
         /// <summary>
