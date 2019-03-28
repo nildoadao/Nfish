@@ -134,7 +134,7 @@ namespace Nfish.Rest
             using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
             {
                 AddRequestHeaders(request, requestMessage);
-                AddMultiparBody(multipartContent, request, method);
+                BuildMultipartBody(multipartContent, request, method);
 
                 if (request.Parameters.Count > 0)
                 {
@@ -142,11 +142,13 @@ namespace Nfish.Rest
                     string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
                     multipartContent.Add(new StringContent(body, Encoding, format));
                 }
+
+                requestMessage.Content = multipartContent;
                 return await GetResponseAsync(requestMessage, request);
             }
         }
 
-        private HttpContent AddMultiparBody(MultipartFormDataContent content, IRequest request, Method method)
+        private HttpContent BuildMultipartBody(MultipartFormDataContent content, IRequest request, Method method)
         {
             foreach (FileParameter file in request.Files)
             {
@@ -169,9 +171,8 @@ namespace Nfish.Rest
             if (request.Format == DataFormat.Json)
             {
                 if (request.Parameters.Count > 0)
-                {
                     body += JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
-                }
+
                 if (!String.IsNullOrEmpty(request.JsonBody))
                     body += request.JsonBody;
             }
@@ -227,6 +228,7 @@ namespace Nfish.Rest
             using (StringContent stringContent = new StringContent(body, Encoding, format))
             {
                 AddRequestHeaders(request, requestMessage);
+                requestMessage.Content = stringContent;
                 return await GetResponseAsync(requestMessage, request);
             }
         }
