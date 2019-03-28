@@ -56,7 +56,7 @@ namespace Nfish.Util
         }
 
         /// <summary>
-        /// Maps an given uri looking for @odate.id links.
+        /// Maps an given uri looking for @odata.id links.
         /// </summary>
         /// <param name="uri">Uri to map.</param>
         /// <returns></returns>
@@ -70,6 +70,12 @@ namespace Nfish.Util
             urisFollowed.Add(uri);
 
             JObject json = JObject.Parse(response.JsonContent);
+
+            /*
+             * During tests, we saw that not every resource has Id and @odata.id
+             * for that reason we check for null before add to the Resources Dictionary
+             * 
+             */
 
             string jsonId = json["Id"] == null ? string.Empty : json["Id"].ToString();
             string odataId = json["@odata.id"] == null ? string.Empty : json["@odata.id"].ToString();
