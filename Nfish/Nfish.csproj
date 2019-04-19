@@ -47,6 +47,7 @@
     <Compile Include="Application\Common\Enums.cs" />
     <Compile Include="Application\Common\Status.cs" />
     <Compile Include="Application\Drive.cs" />
+    <Compile Include="Application\Oem\Dell\IdracJob.cs" />
     <Compile Include="Application\Oem\Dell\ScpFile.cs" />
     <Compile Include="Application\Storage.cs" />
     <Compile Include="Application\UpdateService.cs" />

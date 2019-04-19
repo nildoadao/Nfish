@@ -10,7 +10,9 @@ namespace Nfish.Application.Oem.Dell
 {
     public class ScpFile
     {
-
+        /// <summary>
+        /// Uri to import/export SCP Files
+        /// </summary>
         private const string exportUri = @"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration";
         private const string importUri = @"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ImportSystemConfiguration";
 
