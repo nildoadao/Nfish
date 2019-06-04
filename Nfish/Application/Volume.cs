@@ -36,8 +36,8 @@ namespace Nfish.Application
                 volumeDrives.Add(item);
             }
 
-            request.Parameters.Add("Drives", volumeDrives);
-            request.Parameters.Add("VolumeType", type.ToString());
+            request.BodyParameters.Add("Drives", volumeDrives);
+            request.BodyParameters.Add("VolumeType", type.ToString());
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);
         }
@@ -58,11 +58,11 @@ namespace Nfish.Application
                 volumeDrives.Add(item);
             }
 
-            request.Parameters.Add("Drives", volumeDrives);
-            request.Parameters.Add("VolumeType", type.ToString());
-            request.Parameters.Add("CapacityBytes", capacity);
-            request.Parameters.Add("OptimumIOSizeBytes", ioSize);
-            request.Parameters.Add("Name", name);
+            request.BodyParameters.Add("Drives", volumeDrives);
+            request.BodyParameters.Add("VolumeType", type.ToString());
+            request.BodyParameters.Add("CapacityBytes", capacity);
+            request.BodyParameters.Add("OptimumIOSizeBytes", ioSize);
+            request.BodyParameters.Add("Name", name);
 
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);

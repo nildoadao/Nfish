@@ -11,7 +11,8 @@ namespace Nfish.Rest
     {
         Method Method { get; set; }
         List<FileParameter> Files { get; }
-        IDictionary<string, object> Parameters { get; }
+        IDictionary<string, object> BodyParameters { get; }
+        IDictionary<string, object> QueryParameters { get; }
         string JsonBody { get; }
         IDictionary<string, IList<string>> Headers { get; }
         string Resource { get; set; }
@@ -19,7 +20,6 @@ namespace Nfish.Rest
         IRequest AddJsonBody(object body);
         IRequest AddJsonBody(string json);
         IRequest AddFile(FileParameter file);
-        IRequest AddParameter(string name, object value);
         IRequest AddHeader(string name, string value);
     }
 }

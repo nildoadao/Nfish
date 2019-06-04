@@ -10,13 +10,14 @@ using System.IO;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using System.Xml.Serialization;
+using System.Web;
 
 namespace Nfish.Rest
 {
     /// <summary>
     /// Class with basic information to access devices with Redfish API
     /// </summary>
-    public class RestClient : IClient
+    public class RestClientAsync : IClient
     {
         private string host;
         private string baseUrl;
@@ -47,7 +48,7 @@ namespace Nfish.Rest
 
         private HttpClient Client { get; set; }
 
-        public RestClient()
+        public RestClientAsync()
         {
             Encoding = Encoding.GetEncoding("ISO-8859-1");
             Client = HttpHelper.Create();
@@ -65,26 +66,57 @@ namespace Nfish.Rest
 
         public async Task<IResponse> ExecuteAsync(IRequest request)
         {
+            HttpMethod method = null;
+
             switch (request.Method)
             {
                 case Method.GET:
-                    return await ExecuteGetAsync(request);
+                    method = HttpMethod.Get;
+                    break;
 
                 case Method.POST:
-                    return await ExecutePostOrPutAsync(request);
+                    method = HttpMethod.Post;
+                    break;
 
                 case Method.PUT:
-                    return await ExecutePostOrPutAsync(request);
+                    method = HttpMethod.Put;
+                    break;
 
                 case Method.DELETE:
-                    return await ExecuteDeleteAsync(request);
+                    method = HttpMethod.Delete;
+                    break; ;
 
                 case Method.PATCH:
-                    return await ExecutePatchAsync(request);
+                    method = new HttpMethod("PATCH");
+                    break;
 
                 default:
-                    return await ExecuteGetAsync(request);
+                    method = HttpMethod.Get;
+                    break;
             }
+
+            string targetUri;
+
+            if (request.QueryParameters.Any())
+                targetUri = string.Concat(baseUrl, request.Resource, BuildQueryString(request).Result);
+            else
+                targetUri = string.Concat(baseUrl, request.Resource);
+
+            if (request.BodyParameters.Any() || request.Files.Any())
+                return await ExecuteMultipartRequestAsync(request, method, targetUri);
+            else
+                return await ExecuteSimpleRequestAsync(request, method, targetUri);
+        }
+
+        private async Task<string> BuildQueryString(IRequest request)
+        {
+            Dictionary<string, string> queryParameters = new Dictionary<string, string>();
+
+            foreach (var parameter in request.QueryParameters)
+                queryParameters.Add(parameter.Key, parameter.Value.ToString());
+
+            var content = new FormUrlEncodedContent(queryParameters);
+            return await content.ReadAsStringAsync();
         }
 
         private void AddRequestHeaders(IRequest request, HttpRequestMessage requestMessage)
@@ -94,62 +126,27 @@ namespace Nfish.Rest
                 requestMessage.Headers.TryAddWithoutValidation(header.Key, string.Join(", ", header.Value));
             }
         }
-
-        private async Task<IResponse> ExecutePostOrPutAsync(IRequest request)
-        {
-            if (request.Files.Count > 0)
-                return await MultipartRequestAsync(request, request.Method);
-            else
-                return await StringRequestAsync(request, request.Method);
-        }
-
-        private async Task<IResponse> ExecuteGetAsync(IRequest request)
-        {
-            using(HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, baseUrl + request.Resource))
-            {
-                AddRequestHeaders(request, requestMessage);
-                return await GetResponseAsync(requestMessage, request);
-            }
-        }
-
-        private async Task<IResponse> ExecuteDeleteAsync(IRequest request)
-        {
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, baseUrl + request.Resource))
-            {
-                AddRequestHeaders(request, requestMessage);
-                return await GetResponseAsync(requestMessage, request);
-            }
-        }
-
-        private async Task<IResponse> ExecutePatchAsync(IRequest request)
-        {
-            return await StringRequestAsync(request, Method.PATCH);
-        }
              
-        private async Task<IResponse> MultipartRequestAsync(IRequest request, Method method)
+        private async Task<IResponse> ExecuteMultipartRequestAsync(IRequest request, HttpMethod method, string uri)
         {
-            HttpMethod type = method == Method.POST ? HttpMethod.Post : HttpMethod.Put;
-
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, baseUrl + request.Resource))
-            using (MultipartFormDataContent multipartContent = new MultipartFormDataContent())
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(method, uri))
+            using (MultipartFormDataContent multipartContent = BuildMultipartBody(request))
             {
                 AddRequestHeaders(request, requestMessage);
-                BuildMultipartBody(multipartContent, request, method);
-
-                if (request.Parameters.Count > 0)
-                {
-                    string body = BuildStringBody(request, method);
-                    string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
-                    multipartContent.Add(new StringContent(body, Encoding, format));
-                }
-
                 requestMessage.Content = multipartContent;
                 return await GetResponseAsync(requestMessage, request);
             }
         }
 
-        private HttpContent BuildMultipartBody(MultipartFormDataContent content, IRequest request, Method method)
+        private MultipartFormDataContent BuildMultipartBody(IRequest request)
         {
+            var boundary = Guid.NewGuid().ToString();
+            MultipartFormDataContent content = new MultipartFormDataContent(boundary);
+
+            //Some implementations don't accept boundary in quotes.
+            content.Headers.Remove("Content-Type");
+            content.Headers.TryAddWithoutValidation("Content-Type", "multipart/form-data; boundary=" + boundary);
+
             foreach (FileParameter file in request.Files)
             {
                 StreamContent fileContent = new StreamContent(File.Open(file.Path, FileMode.Open));
@@ -161,34 +158,34 @@ namespace Nfish.Rest
                 };
                 content.Add(fileContent);
             }
-            return content;
-        }
 
-        private string BuildStringBody(IRequest request, Method method)
-        {            
-            string body = "";
+            string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
+            string body = string.Empty;
 
             if (request.Format == DataFormat.Json)
             {
-                if (request.Parameters.Count > 0)
-                    body += JsonConvert.SerializeObject(request.Parameters, Formatting.Indented);
+                if (request.BodyParameters.Any())
+                    body += JsonConvert.SerializeObject(request.BodyParameters, Formatting.Indented);
 
-                if (!String.IsNullOrEmpty(request.JsonBody))
+                if (!string.IsNullOrEmpty(request.JsonBody))
                     body += request.JsonBody;
             }
             else
             {
-                if (request.Parameters.Count > 0)
+                if (request.BodyParameters.Any())
                 {
                     using (StringWriter xml = new StringWriter())
                     {
-                        XmlSerializer parser = new XmlSerializer(request.Parameters.GetType());
-                        parser.Serialize(xml, request.Parameters);
+                        XmlSerializer parser = new XmlSerializer(request.BodyParameters.GetType());
+                        parser.Serialize(xml, request.BodyParameters);
                         body += xml.ToString();
                     }
                 }
             }
-            return body;
+
+            StringContent stringContent = new StringContent(body, Encoding, format);
+            content.Add(stringContent);
+            return content;
         }
 
         private async Task<IResponse> GetResponseAsync(HttpRequestMessage message, IRequest request)
@@ -204,31 +201,11 @@ namespace Nfish.Rest
             }
         }
 
-        private async Task<IResponse> StringRequestAsync(IRequest request, Method method)
-        {            
-            string format = request.Format == DataFormat.Json ? @"application/json" : @"application/xml";
-            HttpMethod type = null;
-
-            switch (method)
-            {
-                case Method.POST:
-                    type = HttpMethod.Post;
-                    break;
-                case Method.PUT:
-                    type = HttpMethod.Put;
-                    break;
-                case Method.PATCH:
-                    type = new HttpMethod("PATCH");
-                    break;
-            }
-
-            string body = BuildStringBody(request, method);
-
-            using (HttpRequestMessage requestMessage = new HttpRequestMessage(type, baseUrl + request.Resource))
-            using (StringContent stringContent = new StringContent(body, Encoding, format))
+        private async Task<IResponse> ExecuteSimpleRequestAsync(IRequest request, HttpMethod method, string uri)
+        {
+            using (HttpRequestMessage requestMessage = new HttpRequestMessage(method, uri))
             {
                 AddRequestHeaders(request, requestMessage);
-                requestMessage.Content = stringContent;
                 return await GetResponseAsync(requestMessage, request);
             }
         }

@@ -13,8 +13,9 @@ namespace Nfish.Rest
 
         public List<FileParameter> Files { get; }
 
-        public IDictionary<string, object> Parameters { get; }
+        public IDictionary<string, object> BodyParameters { get; }
 
+        public IDictionary<string, object> QueryParameters { get; }
         public string JsonBody { get; set; }
 
         public IDictionary<string, IList<string>> Headers { get; }
@@ -27,10 +28,12 @@ namespace Nfish.Rest
         {
             Files = new List<FileParameter>();
             Headers = new Dictionary<string, IList<string>>();
-            Parameters = new Dictionary<string, object>();
+            BodyParameters = new Dictionary<string, object>();
+            QueryParameters = new Dictionary<string, object>();
             JsonBody = "";
             Method = Method.GET;
             Format = DataFormat.Json;
+            Resource = "";
         }
 
         public RestRequest(string resource) : this()
@@ -73,12 +76,6 @@ namespace Nfish.Rest
         public IRequest AddJsonBody(object body)
         {
             JsonBody = JsonConvert.SerializeObject(body);
-            return this;
-        }
-
-        public IRequest AddParameter(string name, object value)
-        {
-            Parameters.Add(name, value);
             return this;
         }
     }

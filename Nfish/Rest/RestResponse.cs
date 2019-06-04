@@ -23,7 +23,6 @@ namespace Nfish.Rest
             else
                 return false;
         }
-
         public RestResponse()
         {
             StatusCode = 0;

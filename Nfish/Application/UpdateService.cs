@@ -48,9 +48,9 @@ namespace Nfish.Application
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
-            request.Parameters.Add("ImageURI", image);
-            request.Parameters.Add("Targets", targets);
-            request.Parameters.Add("TransferProtocol", protocol);
+            request.BodyParameters.Add("ImageURI", image);
+            request.BodyParameters.Add("Targets", targets);
+            request.BodyParameters.Add("TransferProtocol", protocol);
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);
         }
@@ -65,7 +65,7 @@ namespace Nfish.Application
             IRequest request = RestFactory.CreateRequest();
             request.Resource = await GetUpdateServiceUriAsync();
             request.Method = Method.POST;
-            request.Parameters.Add("ImageURI", image);
+            request.BodyParameters.Add("ImageURI", image);
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);
         }

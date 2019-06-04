@@ -45,8 +45,8 @@ namespace Nfish.Application.Oem.Dell
             request.Method = Method.POST;
             request.Format = DataFormat.Json;
     
-            request.Parameters.Add("ExportFormat", format);
-            request.Parameters.Add("SharedParameters", new { Target = target });
+            request.BodyParameters.Add("ExportFormat", format);
+            request.BodyParameters.Add("SharedParameters", new { Target = target });
 
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);
@@ -68,10 +68,10 @@ namespace Nfish.Application.Oem.Dell
             request.Format = DataFormat.Json;
 
             string fileData = File.ReadAllText(path);
-            request.Parameters.Add("ImportBuffer", fileData);
-            request.Parameters.Add("SharedParameters", new { Target = target });
-            request.Parameters.Add("ShutdownType", shutdownType);
-            request.Parameters.Add("HostPowerState", powerState);
+            request.BodyParameters.Add("ImportBuffer", fileData);
+            request.BodyParameters.Add("SharedParameters", new { Target = target });
+            request.BodyParameters.Add("ShutdownType", shutdownType);
+            request.BodyParameters.Add("HostPowerState", powerState);
 
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);

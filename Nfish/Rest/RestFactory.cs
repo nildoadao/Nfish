@@ -10,7 +10,7 @@ namespace Nfish.Rest
     {
         public static IClient CreateClient()
         {
-            return new RestClient();
+            return new RestClientAsync();
         }
 
         public static IRequest CreateRequest()

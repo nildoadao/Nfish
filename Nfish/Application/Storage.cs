@@ -33,7 +33,7 @@ namespace Nfish.Application
             request.Method = Method.POST;
             request.Format = DataFormat.Json;
 
-            request.Parameters.Add("EncryptionKey", key);
+            request.BodyParameters.Add("EncryptionKey", key);
 
             client.Authenticate(authenticator, request);
             return await client.ExecuteAsync(request);
